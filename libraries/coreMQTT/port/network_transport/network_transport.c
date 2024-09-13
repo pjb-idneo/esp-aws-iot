@@ -29,9 +29,9 @@ TlsTransportStatus_t xTlsConnect( NetworkContext_t* pxNetworkContext )
     xSemaphoreTake(pxNetworkContext->xTlsContextSemaphore, portMAX_DELAY);
     pxNetworkContext->pxTls = pxTls;
 
-    if (esp_tls_conn_new_sync( pxNetworkContext->pcHostname, 
-            strlen( pxNetworkContext->pcHostname ), 
-            pxNetworkContext->xPort, 
+    if (esp_tls_conn_new_sync( pxNetworkContext->pcHostname,
+            strlen( pxNetworkContext->pcHostname ),
+            pxNetworkContext->xPort,
             &xEspTlsConfig, pxTls) <= 0)
     {
         if (pxNetworkContext->pxTls)
@@ -52,7 +52,7 @@ TlsTransportStatus_t xTlsDisconnect( NetworkContext_t* pxNetworkContext )
     BaseType_t xRet = TLS_TRANSPORT_SUCCESS;
 
     xSemaphoreTake(pxNetworkContext->xTlsContextSemaphore, portMAX_DELAY);
-    if (pxNetworkContext->pxTls != NULL && 
+    if (pxNetworkContext->pxTls != NULL &&
         esp_tls_conn_destroy(pxNetworkContext->pxTls) < 0)
     {
         xRet = TLS_TRANSPORT_DISCONNECT_FAILURE;
@@ -73,16 +73,16 @@ int32_t espTlsTransportSend(NetworkContext_t* pxNetworkContext,
 
     int32_t lBytesSent = 0;
 
+    xSemaphoreTake(pxNetworkContext->xTlsContextSemaphore, portMAX_DELAY);
     if(pxNetworkContext != NULL && pxNetworkContext->pxTls != NULL)
     {
-        xSemaphoreTake(pxNetworkContext->xTlsContextSemaphore, portMAX_DELAY);
         lBytesSent = esp_tls_conn_write(pxNetworkContext->pxTls, pvData, uxDataLen);
-        xSemaphoreGive(pxNetworkContext->xTlsContextSemaphore);
     }
     else
     {
         lBytesSent = -1;
     }
+    xSemaphoreGive(pxNetworkContext->xTlsContextSemaphore);
 
     return lBytesSent;
 }
@@ -95,16 +95,16 @@ int32_t espTlsTransportRecv(NetworkContext_t* pxNetworkContext,
         return -1;
     }
     int32_t lBytesRead = 0;
+    xSemaphoreTake(pxNetworkContext->xTlsContextSemaphore, portMAX_DELAY);
     if(pxNetworkContext != NULL && pxNetworkContext->pxTls != NULL)
     {
-        xSemaphoreTake(pxNetworkContext->xTlsContextSemaphore, portMAX_DELAY);
         lBytesRead = esp_tls_conn_read(pxNetworkContext->pxTls, pvData, uxDataLen);
-        xSemaphoreGive(pxNetworkContext->xTlsContextSemaphore);
     }
     else
     {
         return -1; /* pxNetworkContext or pxTls uninitialised */
     }
+    xSemaphoreGive(pxNetworkContext->xTlsContextSemaphore);
     if (lBytesRead == ESP_TLS_ERR_SSL_WANT_WRITE  || lBytesRead == ESP_TLS_ERR_SSL_WANT_READ) {
         return 0;
     }
