@@ -102,6 +102,7 @@ int32_t espTlsTransportRecv(NetworkContext_t* pxNetworkContext,
     }
     else
     {
+        xSemaphoreGive(pxNetworkContext->xTlsContextSemaphore);
         return -1; /* pxNetworkContext or pxTls uninitialised */
     }
     xSemaphoreGive(pxNetworkContext->xTlsContextSemaphore);
